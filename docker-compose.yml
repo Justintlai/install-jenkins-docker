@@ -1,34 +1,17 @@
-version: '3.7'
+version: "3.7"
 
 services:
-  jenkins-docker:
-    image: docker:dind
-    container_name: jenkins-docker
-    privileged: true
-    environment:
-      - DOCKER_TLS_CERTDIR=/certs
-    volumes:
-      - jenkins-docker-certs:/certs/client
-      - jenkins-data:/var/jenkins_home
-    ports:
-      - "2376:2376"
-    networks:
-      jenkins:
-        aliases:
-          - docker
-    command: --storage-driver overlay2
-
   my-jenkins:
     image: my-jenkins
     container_name: my-jenkins
     restart: on-failure
     environment:
-      - DOCKER_HOST=tcp://docker:2376
-      - DOCKER_CERT_PATH=/certs/client
-      - DOCKER_TLS_VERIFY=1
+      # Update the DOCKER_HOST to point to the Unix socket on the host.
+      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - jenkins-data:/var/jenkins_home
-      - jenkins-docker-certs:/certs/client:ro
+      # Mount the host's Docker socket so that docker commands run inside the container affect the host daemon.
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8080:8080"
       - "50000:50000"
@@ -40,5 +23,4 @@ networks:
     driver: bridge
 
 volumes:
-  jenkins-docker-certs:
   jenkins-data:
